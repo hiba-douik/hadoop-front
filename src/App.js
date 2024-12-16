@@ -37,7 +37,7 @@ function App() {
 
                     <Route path="/recetteForm" element={<RecetteForm />} /> {/* Chemin en minuscule */}
                     <Route path="/CreateRecipe" element={<CreateRecipe />} /> {/* Chemin en minuscule */}
-                    <Route path="/EditRecipe" element={<EditRecipe />} /> {/* Chemin en minuscule */}
+                    <Route path="/EditRecipe/:recipeId" element={<EditRecipe />} /> {/* Chemin en minuscule */}
                 </Routes>
             </div>
             <Footer />

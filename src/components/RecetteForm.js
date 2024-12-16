@@ -14,6 +14,7 @@ export default function RecetteForm() {
     const [isEditingProfile, setIsEditingProfile] = useState(false);
     const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
     const [recipeToDelete, setRecipeToDelete] = useState(null);
+    const [password, setPassword] = useState('');
 
     const fetchUserData = async (id) => {
         try {
@@ -25,7 +26,7 @@ export default function RecetteForm() {
             console.error("Error fetching user data:", error);
         }
     };
-    
+
     useEffect(() => {
         const userId = getUserIdFromSessionStorage();
         console.log("User ID from session:", userId); // Debugging
@@ -34,18 +35,19 @@ export default function RecetteForm() {
             fetchUserRecipes(userId);
         }
     }, []);
-    
+
 
     const fetchUserRecipes = async (userId) => {
         try {
             const response = await axios.get(`http://localhost:5000/api/recipes/user/${userId}`);
             const cleanedRecipes = response.data.recipes.map(recipe => ({
                 ...recipe,
-                title : recipe.title  || "" ,
+                title: recipe.title || "",
                 description: recipe.description || "",
                 instructions: recipe.instructions?.map(inst => inst.step) || [],
                 ingredients: recipe.ingredients || []
             }));
+            console.log("cleaned recipes :", cleanedRecipes);
             setRecipes(cleanedRecipes);
         } catch (error) {
             console.error('Error fetching recipes:', error);
@@ -57,11 +59,11 @@ export default function RecetteForm() {
         if (userData) {
             const parsedData = JSON.parse(userData);
             // Assurez-vous que `id` (email) est utilisé pour la clé
-            return parsedData.email || null; 
+            return parsedData.email || null;
         }
         return null;
     };
-    
+
 
     useEffect(() => {
         const userId = getUserIdFromSessionStorage();
@@ -72,16 +74,22 @@ export default function RecetteForm() {
     }, []);
 
     const saveUserProfile = async () => {
-        if (user) {
-            try {
-                const response = await axios.put(`http://localhost:5000/api/users/${user.userId}`, user);
-                if (response.data.success) {
-                    setUser(response.data.user);
-                    navigate('/RecetteForm');
-                }
-            } catch (error) {
-                console.error('Error saving user profile:', error);
+        try {
+            const updatedUser = {
+                username: user.username,
+                email: user.email,
+                password: password,
+            };
+            const response = await axios.put(`http://localhost:5000/api/users/${user.email}`, updatedUser);
+            if (response.status === 200) {
+                alert('User updated successfully!');
+                setIsEditingProfile(false);
+            } else {
+                alert('Failed to update user');
             }
+        } catch (error) {
+            console.error('Error updating user:', error);
+            alert('An error occurred while updating the user');
         }
     };
 
@@ -104,11 +112,11 @@ export default function RecetteForm() {
         setRecipeToDelete(recipe);
         setShowDeleteConfirmation(true);
     };
-    
+
     const confirmDelete = async () => {
         const userId = getUserIdFromSessionStorage();
         if (!userId || !recipeToDelete) return;
-    
+
         try {
             const response = await axios.delete(`http://localhost:5000/api/recipes/${recipeToDelete.recipeId}`); // Send the recipeId
             if (response.data.success) {
@@ -124,7 +132,7 @@ export default function RecetteForm() {
         }
         navigate('/home');
     };
-    
+
 
     const cancelDelete = () => {
         setShowDeleteConfirmation(false);
@@ -132,7 +140,7 @@ export default function RecetteForm() {
     };
 
     const editRecipe = (recipe) => {
-        navigate('/EditRecipe', { state: { recipe } });
+        navigate(`/EditRecipe/${recipe.recipeId}`);
     };
 
     const toggleForm = () => {
@@ -172,8 +180,8 @@ export default function RecetteForm() {
             border: 'none',
             borderRadius: '5px',
             cursor: 'pointer',
-            marginRight:'3px',
-            marginBottom:'2px',
+            marginRight: '3px',
+            marginBottom: '2px',
         },
         deleteButton: {
             cursor: 'pointer',
@@ -182,8 +190,9 @@ export default function RecetteForm() {
         },
         editButton: {
             cursor: 'pointer',
-            fontSize: '20px',
+            fontSize: '12px',
             color: '#FF0056',
+            width: '300px'
         },
         input: {
             display: 'block',
@@ -222,13 +231,13 @@ export default function RecetteForm() {
             height: '100px',
             borderRadius: '50%',
             objectFit: 'cover',
-            marginRight:'5px',
+            marginRight: '5px',
         },
         infoContainer: {
             display: 'flex',
             flexDirection: 'column',
             flex: 1,
-            marginLeft:'5px',
+            marginLeft: '5px',
         },
         profileTitle: {
             margin: '0',
@@ -237,6 +246,7 @@ export default function RecetteForm() {
         infoRow: {
             display: 'flex',
             alignItems: 'center',
+            padding: '20px',
             marginBottom: '8px',
             width: '100%',
         },
@@ -249,7 +259,7 @@ export default function RecetteForm() {
             borderRadius: '4px',
             padding: '2px 17px',
             textAlign: 'left',
-            marginRight:'340px',
+            marginRight: '340px',
             alignItems: 'center',
             justifyContent: 'center',
             flexGrow: 1,
@@ -275,88 +285,89 @@ export default function RecetteForm() {
 
     return (
         <div style={styles.container}>
-            {user && (
-                <div style={styles.profileContainer}>
-                    <div style={styles.profileCard}>
-                        {isEditingProfile ? (
-                            <>
-                                <img src={user.image} alt="User" style={styles.profileImage} />
-                                <div style={styles.infoContainer}>
-                                    <h2 style={styles.profileTitle}>{user.username}</h2>
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={(e) => {
-                                            const file = e.target.files[0];
-                                            if (file) {
-                                                const reader = new FileReader();
-                                                reader.onloadend = () => {
-                                                    setUser({ ...user, image: reader.result });
-                                                };
-                                                reader.readAsDataURL(file);
-                                            }
-                                        }}
-                                        style={styles.input}
-                                    />
-                                    <input
-                                        type="text"
-                                        placeholder="username"
-                                        value={user.username}
-                                        onChange={(e) => setUser({ ...user, username: e.target.value })}
-                                        style={styles.input}
-                                    />
-                                    <input
-                                        type="text"
-                                        placeholder="Email"
-                                        value={user.email}
-                                        onChange={(e) => setUser({ ...user, email: e.target.value })}
-                                        style={styles.input}
-                                    />
-                                    <input
-                                        type="text"
-                                        placeholder="Rôle"
-                                        value={user.role}
-                                        onChange={(e) => setUser({ ...user, role: e.target.value })}
-                                        style={styles.input}
-                                    />
-                                    <button
-                                        onClick={() => {
-                                            saveUserProfile();
-                                            setIsEditingProfile(false);
-                                        }}
-                                        style={styles.button}
-                                    >
-                                        Sauvegarder
-                                    </button>
-                                    <button onClick={() => setIsEditingProfile(false)} style={styles.button}>
-                                        Annuler
-                                    </button>
-                                </div>
-                            </>
-                        ) : (
-                            <>
-                                <img src={user.image} alt="User" style={styles.profileImage} />
-                                <div style={styles.infoContainer}>
-                                    <h2 style={styles.profileTitle}>{user.username}</h2>
-                                    <div style={styles.infoRow}>
-                                        <span style={styles.infoLabel}>Email:</span>
-                                        <div style={styles.infoBox}>
-                                            <span style={styles.infoValue}>{user.email}</span>
-                                        </div>
+            {
+                user && (
+                    <div style={styles.profileContainer}>
+                        <div style={styles.profileCard}>
+                            {isEditingProfile ? (
+                                <>
+                                    <img src={user.image} alt="User" style={styles.profileImage} />
+                                    <div style={styles.infoContainer}>
+                                        <h2 style={styles.profileTitle}>Edit Profile</h2>
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={(e) => {
+                                                const file = e.target.files[0];
+                                                if (file) {
+                                                    const reader = new FileReader();
+                                                    reader.onloadend = () => {
+                                                        setUser({ ...user, image: reader.result });
+                                                    };
+                                                    reader.readAsDataURL(file);
+                                                }
+                                            }}
+                                            style={styles.input}
+                                        />
+                                        <input
+                                            type="text"
+                                            placeholder="Username"
+                                            value={user.username}
+                                            onChange={(e) => setUser({ ...user, username: e.target.value })}
+                                            style={styles.input}
+                                        />
+                                        <input
+                                            type="email"
+                                            placeholder="Email"
+                                            value={user.email}
+                                            onChange={(e) => setUser({ ...user, email: e.target.value })}
+                                            style={styles.input}
+                                        />
+                                        <input
+                                            type="password"
+                                            placeholder="New Password"
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            style={styles.input}
+                                        />
+                                        <button
+                                            onClick={saveUserProfile}
+                                            style={styles.button}
+                                        >
+                                            Save
+                                        </button>
+                                        <button
+                                            onClick={() => setIsEditingProfile(false)}
+                                            style={styles.button}
+                                        >
+                                            Cancel
+                                        </button>
                                     </div>
-                                    <div style={styles.infoRow}>
-                                        <span style={styles.infoLabel}>Rôle:</span>
-                                        <div style={styles.infoBox}>
-                                            <span style={styles.infoValue}>{user.role}</span>
+                                </>
+                            ) : (
+                                <>
+                                    <img src={user.image} alt="User" style={styles.profileImage} />
+                                    <div style={styles.infoContainer}>
+                                        <h2 style={styles.profileTitle}>{user.username}</h2>
+                                        <div style={styles.infoRow}>
+                                            <span style={styles.infoLabel}>Email:</span>
+                                            <div style={styles.infoBox}>
+                                                <span style={styles.infoValue}>{user.email}</span>
+                                            </div>
                                         </div>
+                                        <button
+                                            onClick={() => setIsEditingProfile(true)}
+                                            style={styles.editButton}
+                                        >
+                                            Edit Profile
+                                        </button>
                                     </div>
-                                    <MdEdit style={styles.editProfileIcon} onClick={() => setIsEditingProfile(true)} />
-                                </div>
-                            </>
-                        )}
+                                </>
+                            )}
+                        </div>
                     </div>
-                </div>
-            )}
+                )
+            }
             <div style={styles.buttonRightContainer}>
                 <button style={styles.button} onClick={toggleForm}>
                     {showForm ? "Annuler" : "Ajouter une recette"}
@@ -392,19 +403,19 @@ export default function RecetteForm() {
             )}
             <h2 style={styles.title}>Vos Recettes</h2>
             <div>
-                {recipes.map((recipe, index) => (
+                {recipes?.map((recipe, index) => (
                     <div key={index} style={styles.recipeItem}>
                         <img
                             src={recipe.image}
-                            alt={recipe.recipeName || 'Recipe Image'}
+                            alt={recipe?.title || 'Recipe Image'}
                             style={styles.image}
                         />
                         <div>
-                            <h3>{recipe.recipeName}</h3>
+                            <h3>{recipe?.title}</h3>
                             <h4>Instructions</h4>
                             <ul>
                                 {recipe.instructions?.map((step, i) => (
-                                    <li key={i}>{step}</li>
+                                    <li key={i}>{step.step}</li>
                                 ))}
                             </ul>
                             <h4>Ingrédients</h4>

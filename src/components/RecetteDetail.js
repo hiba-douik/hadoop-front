@@ -23,7 +23,7 @@ const RecetteDetail = () => {
 
                 if (data.message === 'Recette récupérée avec succès') {
                     console.log("Recipe data:", data);
-                    setRecipeDetails(data.recipe);
+                    setRecipeDetails(data);
                 } else {
                     setError('Recette non trouvée');
                 }
@@ -91,7 +91,7 @@ const RecetteDetail = () => {
 
     return (
         <div style={styles.container}>
-            <h1 style={styles.title}>Recette Detail: {recipeDetails?.title}</h1>
+            <h1 style={styles.title}>Recette Detail: {recipeDetails?.recipe.title}</h1>
             {error && <p style={styles.error}>{error}</p>}
 
             {loading ? (
@@ -103,8 +103,8 @@ const RecetteDetail = () => {
                             {/* <h2>{recipeDetails.title}</h2> */}
                             <p style={styles.description}>{recipeDetails?.description}</p>
                             <img
-                                src={recipeDetails?.image} // Remplacez par l'URL de votre image
-                                alt={recipeDetails?.title || 'Recipe Image'}
+                                src={recipeDetails?.recipe.image} // Remplacez par l'URL de votre image
+                                alt={recipeDetails?.recipe.title || 'Recipe Image'}
                                 style={styles.image}
                             />
 
@@ -112,7 +112,7 @@ const RecetteDetail = () => {
 
                         <div style={styles.ingredients}>
                             <h4>Ingrédients:</h4>
-                            {Array.isArray(recipeDetails.ingredients) && recipeDetails.ingredients.length > 0 ? (
+                            {recipeDetails?.ingredients ? (
                                 <ul>
                                     {recipeDetails.ingredients.map((ingredient, index) => (
                                         <li key={index}>{ingredient.name}</li>
@@ -125,7 +125,7 @@ const RecetteDetail = () => {
 
                         <div style={styles.instructions}>
                             <h4>Instructions:</h4>
-                            {Array.isArray(recipeDetails.instructions) && recipeDetails.instructions.length > 0 ? (
+                            {recipeDetails?.instructions ? (
                                 <ol>
                                     {recipeDetails.instructions.map((instruction, index) => (
                                         <li key={index}>{instruction.step}</li>

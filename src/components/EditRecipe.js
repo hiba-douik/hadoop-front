@@ -1,76 +1,52 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useLocation, useNavigate } from 'react-router-dom';
+import {useNavigate, useParams } from 'react-router-dom';
 
 export default function EditRecipe() {
-    const location = useLocation();
+
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
-    const [recipe, setRecipe] = useState({
-        title: "", // Définissez un titre par défaut vide
-        description: "",
-        image: "",
-        ingredients: [""],
-        instructions: [""]
-    });
+    const [recipe, setRecipe] = useState({ title: "", description: "", image: "", instructions: [], ingredients: [] });
+    const { recipeId } = useParams();
 
     useEffect(() => {
-        if (location.state?.recipe) {
-            const { title, description, image, ingredient, instruction } = location.state.recipe;
-            setRecipe({
-                title: title || "", // Mettez à jour ici avec recipeName si disponible
-                description: description || "",
-                image: image || "",
-                ingredients: ingredient || [""],
-                instructions: instruction || [""]
-            });
-        }
-    }, [location.state]);
+        const fetchRecipeDetails = async () => {
+            try {
+                const apiUrl = `http://localhost:5000/api/recipes/${recipeId}`;
+                console.log(recipeId);
 
+                const response = await axios.get(apiUrl);
+                const data = await response.data;
 
+                console.log("recipe data:", data);
+
+                // Set fetched data into state
+                setRecipe({
+                    title: data.recipe.title,
+                    description: data.recipe.description,
+                    image: data.recipe.image,
+                    instructions: data.instructions,
+                    ingredients: data.ingredients,
+                });
+            } catch (error) {
+                console.log(error);
+            }
+        };
+        fetchRecipeDetails();
+    }, [recipeId]);
 
     const getUserIdFromSessionStorage = () => {
         const userData = sessionStorage.getItem('authenticatedUser');
         if (userData) {
             try {
-                console.log('Raw sessionStorage data:', userData);
                 const parsedData = JSON.parse(userData);
-                console.log('Parsed sessionStorage data:', parsedData);
-
-                // Check if `user` and `userId` exist
-                if (parsedData.user && parsedData.user.userId) {
-                    return parsedData.user.userId;
-                } else {
-                    console.error('`userId` not found in parsed data:', parsedData);
-                    return null;
-                }
+                return parsedData.user.userId;
             } catch (error) {
                 console.error('Error parsing sessionStorage data:', error);
                 return null;
             }
         }
-        console.warn('No data found in sessionStorage under `authenticatedUser`');
         return null;
-    };
-    const formatRecipeData = (recipe) => {
-        // Reformate les instructions
-        const formattedInstructions = recipe.instructions.map(instruction => ({
-            step: instruction // Remplace les éléments du tableau par un objet avec la clé "step"
-        }));
-
-        // Reformate les ingrédients
-        const formattedIngredients = recipe.ingredients.map(ingredient => ({
-            name: ingredient.name // Garde l'ingrédient tel quel
-        }));
-
-        // Reformate la recette complète
-        return {
-            title: recipe.title,
-            description: recipe.description,
-            image: recipe.image,
-            instructions: formattedInstructions,
-            ingredients: formattedIngredients
-        };
     };
 
     const handleSubmit = async (e) => {
@@ -78,20 +54,19 @@ export default function EditRecipe() {
         setIsLoading(true);
 
         try {
-            const userId = getUserIdFromSessionStorage();  // Récupération de l'ID utilisateur depuis le sessionStorage
+            const userId = getUserIdFromSessionStorage();
             console.log('ID utilisateur récupéré :', userId);
 
-            // Reformater les données avant de les envoyer
-            const formattedRecipe = formatRecipeData(recipe);
-            console.log('Données reformattées :', formattedRecipe);
+            // Send the updated data to the backend
+            await axios.put(`http://localhost:5000/api/recipes/${recipeId}`, {
+                title: recipe.title,
+                description: recipe.description,
+                image: recipe.image,
+                instructions: recipe.instructions,
+                ingredients: recipe.ingredients,
+            });
 
-            // Envoi des données formatées au backend
-            await axios.put(
-                `http://localhost:5000/api/recipes/${userId}`,
-                formattedRecipe
-            );
-
-            navigate('/recipes');  // Redirige après la soumission
+            navigate('/recipes');
         } catch (error) {
             console.error('Erreur lors de la modification:', error);
         } finally {
@@ -119,14 +94,14 @@ export default function EditRecipe() {
                         className="input-field"
                         required
                     />
-               
+
                     {recipe.image && <img src={recipe.image} alt="Recipe" className="recipe-image" />}
                     <div className="ingredients-section">
                         <div className="ingredients-header">
                             <h4>Ingrédients</h4>
                             <button
                                 type="button"
-                                onClick={() => setRecipe({ ...recipe, ingredients: [...recipe.ingredients, ""] })}
+                                onClick={() => setRecipe({ ...recipe, ingredients: [...recipe.ingredients, { name: "" }] })}
                                 className="btn add-btn"
                             >
                                 +
@@ -137,10 +112,10 @@ export default function EditRecipe() {
                                 <input
                                     type="text"
                                     placeholder={`Ingrédient ${index + 1}`}
-                                    value={ingredient.name} // Utilisez `ingredient.name` pour l'affichage
+                                    value={ingredient.name}
                                     onChange={(e) => {
                                         const updatedIngredients = [...recipe.ingredients];
-                                        updatedIngredients[index] = { name: e.target.value }; // Mettez à jour `name`
+                                        updatedIngredients[index] = { name: e.target.value };
                                         setRecipe({ ...recipe, ingredients: updatedIngredients });
                                     }}
                                     className="input-field"
@@ -161,12 +136,13 @@ export default function EditRecipe() {
                             </div>
                         ))}
                     </div>
+
                     <div className="instructions-section">
                         <div className="instructions-header">
                             <h4>Étapes</h4>
                             <button
                                 type="button"
-                                onClick={() => setRecipe({ ...recipe, instructions: [...recipe.instructions, ""] })}
+                                onClick={() => setRecipe({ ...recipe, instructions: [...recipe.instructions, { step: "" }] })}
                                 className="btn add-btn"
                             >
                                 +
@@ -177,10 +153,10 @@ export default function EditRecipe() {
                                 <input
                                     type="text"
                                     placeholder={`Instruction ${index + 1}`}
-                                    value={instruction}
+                                    value={instruction.step}
                                     onChange={(e) => {
                                         const updatedInstructions = [...recipe.instructions];
-                                        updatedInstructions[index] = e.target.value;
+                                        updatedInstructions[index] = { step: e.target.value };
                                         setRecipe({ ...recipe, instructions: updatedInstructions });
                                     }}
                                     className="input-field"
@@ -201,12 +177,13 @@ export default function EditRecipe() {
                             </div>
                         ))}
                     </div>
+
                     <button type="submit" className="btn submit-btn" disabled={isLoading}>
                         {isLoading ? 'Modification en cours...' : 'Modifier la recette'}
                     </button>
                 </form>
             </div>
-       
+
             <style jsx>{`
                 .recipe-page {
                     display: flex;
