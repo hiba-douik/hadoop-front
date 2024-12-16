@@ -2,7 +2,7 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 
 const fetchUserRecipes = async (userId) => {
-    const response = await fetch(`/api/recipes/${userId}`);
+    const response = await fetch(`http://localhost:5000/api/recipes/`);
     if (!response.ok) {
         throw new Error('Network response was not ok');
     }

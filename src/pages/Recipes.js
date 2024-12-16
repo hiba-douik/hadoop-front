@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PreviousSearches from "../components/PreviousSearches";
 import RecipeCard from "../components/RecipeCard";
+import axios from "axios";
 
 export default function Recipes() {
     const [recipes, setRecipes] = useState([]);
@@ -13,11 +14,12 @@ export default function Recipes() {
     useEffect(() => {
         const fetchRecipes = async () => {
             try {
-                const response = await fetch("http://localhost:3000/api/recipes"); // Mise à jour de l'URL de l'API
-                if (!response.ok) {
-                    throw new Error("Network response was not ok");
-                }
-                const data = await response.json();
+                const response = await axios.get("http://localhost:5000/api/recipes"); // Mise à jour de l'URL de l'API
+                console.log(response.data)
+                // if (!response.ok) {
+                //     throw new Error("Network response was not ok");
+                // }
+                const data = response.data.recipes;
                 console.log("Data fetched from API:", data);
 
                 // Formatage des données récupérées depuis l'API
@@ -64,7 +66,7 @@ export default function Recipes() {
             <PreviousSearches setSearchQuery={setSearchQuery} />
             <div className="recipes-container">
                 {filteredRecipes.sort(() => Math.random() - 0.5).map((recipe, index) => (
-                    <div key={index} onClick={() => handleRecipeClick(recipe.title)}>
+                    <div key={index} onClick={() => handleRecipeClick(recipe.recipeId)}>
                         <RecipeCard
                             recipe={{
                                 ...recipe,

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
 const RecetteDetail = () => {
-    const { tile } = useParams();
+    const { recipeId } = useParams();
     const [recipeDetails, setRecipeDetails] = useState(null);
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -10,7 +10,7 @@ const RecetteDetail = () => {
     useEffect(() => {
         const fetchRecipeDetails = async () => {
             try {
-                const encodedTile = encodeURIComponent(tile);
+                const encodedTile = encodeURIComponent(recipeId);
                 const apiUrl = `http://localhost:5000/api/recipes/${encodedTile}`;
 
                 const response = await fetch(apiUrl);
@@ -23,7 +23,7 @@ const RecetteDetail = () => {
 
                 if (data.message === 'Recette récupérée avec succès') {
                     console.log("Recipe data:", data);
-                    setRecipeDetails(data);
+                    setRecipeDetails(data.recipe);
                 } else {
                     setError('Recette non trouvée');
                 }
@@ -36,7 +36,7 @@ const RecetteDetail = () => {
         };
 
         fetchRecipeDetails();
-    }, [tile]);
+    }, [recipeId]);
 
 
     const handleDownload = async () => {
@@ -91,7 +91,7 @@ const RecetteDetail = () => {
 
     return (
         <div style={styles.container}>
-            <h1 style={styles.title}>Recette Detail: {tile}</h1>
+            <h1 style={styles.title}>Recette Detail: {recipeDetails?.title}</h1>
             {error && <p style={styles.error}>{error}</p>}
 
             {loading ? (
@@ -100,11 +100,11 @@ const RecetteDetail = () => {
                 recipeDetails ? (
                     <div style={styles.recipeDetails}>
                         <div style={styles.recipeHeader}>
-                            <h2>{recipeDetails.title}</h2>
-                            <p style={styles.description}>{recipeDetails.description}</p>
+                            {/* <h2>{recipeDetails.title}</h2> */}
+                            <p style={styles.description}>{recipeDetails?.description}</p>
                             <img
-                                src="https://th.bing.com/th?id=OSK.598c5b2b7b65082004e599cc520830a2" // Remplacez par l'URL de votre image
-                                alt={recipeDetails.title || 'Recipe Image'}
+                                src={recipeDetails?.image} // Remplacez par l'URL de votre image
+                                alt={recipeDetails?.title || 'Recipe Image'}
                                 style={styles.image}
                             />
 

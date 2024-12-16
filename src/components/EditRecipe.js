@@ -16,13 +16,13 @@ export default function EditRecipe() {
 
     useEffect(() => {
         if (location.state?.recipe) {
-            const { recipeName, description, image, ingredients, instructions } = location.state.recipe;
+            const { title, description, image, ingredient, instruction } = location.state.recipe;
             setRecipe({
-                title: recipeName || "", // Mettez à jour ici avec recipeName si disponible
+                title: title || "", // Mettez à jour ici avec recipeName si disponible
                 description: description || "",
                 image: image || "",
-                ingredients: ingredients || [""],
-                instructions: instructions || [""]
+                ingredients: ingredient || [""],
+                instructions: instruction || [""]
             });
         }
     }, [location.state]);

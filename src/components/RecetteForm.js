@@ -15,20 +15,34 @@ export default function RecetteForm() {
     const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
     const [recipeToDelete, setRecipeToDelete] = useState(null);
 
-    const fetchUserData = async (userId) => {
+    const fetchUserData = async (id) => {
         try {
-            const response = await axios.get(`http://localhost:5000/api/users/${userId}`);
-            setUser(response.data);
+            console.log("Fetching user with ID:", id); // Debugging
+            const response = await axios.get(`http://localhost:5000/api/users/${id}`);
+            console.log("Fetched user data:", response.data); // Debugging
+            setUser(response.data.user); // Récupérer les données de l'utilisateur
         } catch (error) {
             console.error("Error fetching user data:", error);
         }
     };
+    
+    useEffect(() => {
+        const userId = getUserIdFromSessionStorage();
+        console.log("User ID from session:", userId); // Debugging
+        if (userId) {
+            fetchUserData(userId);
+            fetchUserRecipes(userId);
+        }
+    }, []);
+    
 
     const fetchUserRecipes = async (userId) => {
         try {
-            const response = await axios.get(`http://localhost:5000/api/recipes/${userId}`);
+            const response = await axios.get(`http://localhost:5000/api/recipes/user/${userId}`);
             const cleanedRecipes = response.data.recipes.map(recipe => ({
                 ...recipe,
+                title : recipe.title  || "" ,
+                description: recipe.description || "",
                 instructions: recipe.instructions?.map(inst => inst.step) || [],
                 ingredients: recipe.ingredients || []
             }));
@@ -42,10 +56,12 @@ export default function RecetteForm() {
         const userData = sessionStorage.getItem('authenticatedUser');
         if (userData) {
             const parsedData = JSON.parse(userData);
-            return parsedData.user?.userId || null;
+            // Assurez-vous que `id` (email) est utilisé pour la clé
+            return parsedData.email || null; 
         }
         return null;
     };
+    
 
     useEffect(() => {
         const userId = getUserIdFromSessionStorage();
@@ -88,13 +104,13 @@ export default function RecetteForm() {
         setRecipeToDelete(recipe);
         setShowDeleteConfirmation(true);
     };
-
+    
     const confirmDelete = async () => {
         const userId = getUserIdFromSessionStorage();
         if (!userId || !recipeToDelete) return;
-
+    
         try {
-            const response = await axios.delete(`http://localhost:5000/api/recipes/${recipeToDelete.recipeName}`);
+            const response = await axios.delete(`http://localhost:5000/api/recipes/${recipeToDelete.recipeId}`); // Send the recipeId
             if (response.data.success) {
                 const updatedRecipes = recipes.filter(r => r.recipeId !== recipeToDelete.recipeId);
                 setRecipes(updatedRecipes);
@@ -108,6 +124,7 @@ export default function RecetteForm() {
         }
         navigate('/home');
     };
+    
 
     const cancelDelete = () => {
         setShowDeleteConfirmation(false);

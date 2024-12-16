@@ -44,8 +44,7 @@ export default function Auth() {
         const userDataToStore = {
           email: response.data.email,
           username: response.data.username,
-          accessToken: response.data.accessToken,
-          userId: response.data.userId  // Utilisation du userId généré par le backend
+          userId: response.data.userId, // Utilisation du userId généré par le backend
         };
         sessionStorage.setItem('authenticatedUser', JSON.stringify(userDataToStore));
         navigate('/RecetteForm');
@@ -57,7 +56,6 @@ export default function Auth() {
       console.error('Error:', error);
     }
   };
-  
 
   return (
     <Container maxWidth="sm">
@@ -140,4 +138,3 @@ export default function Auth() {
     </Container>
   );
 }
-

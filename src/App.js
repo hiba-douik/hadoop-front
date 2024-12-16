@@ -32,7 +32,7 @@ function App() {
                     <Route path="/recipe-list" element={<RecipeList />} /> {/* Utilisation de tirets pour séparer les mots */}
                     <Route path="/settings" element={<Settings />} />
                     <Route path="/search" element={<SearchRecipesByIngredients />} /> {/* Ajout de la route pour la recherche */}
-                    <Route path="/RecetteDetail/:tile" element={<RecetteDetail />} />
+                    <Route path="/RecetteDetail/:recipeId" element={<RecetteDetail />} />
 
 
                     <Route path="/recetteForm" element={<RecetteForm />} /> {/* Chemin en minuscule */}
