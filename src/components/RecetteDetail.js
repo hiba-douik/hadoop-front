@@ -11,7 +11,7 @@ const RecetteDetail = () => {
         const fetchRecipeDetails = async () => {
             try {
                 const encodedTile = encodeURIComponent(tile);
-                const apiUrl = `http://localhost:3000/api/recipe/${encodedTile}`;
+                const apiUrl = `http://localhost:5000/api/recipes/${encodedTile}`;
 
                 const response = await fetch(apiUrl);
 
@@ -61,7 +61,7 @@ const RecetteDetail = () => {
         console.log("Data to be sent:", data);
 
         try {
-            const response = await fetch("http://localhost:3000/download-recipe", {
+            const response = await fetch("http://localhost:5000/api/pdf/download-recipe", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

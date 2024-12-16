@@ -6,14 +6,16 @@ export default function CreateRecipe() {
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
-
+    
     // Récupérer l'userId depuis le sessionStorage
     const getUserFromSession = () => {
         const userData = sessionStorage.getItem('authenticatedUser');
+        console.log('User data from sessionStorage:', userData); // This should log the user data
         const parsedUserData = userData ? JSON.parse(userData) : null;
+        console.log('Parsed user data:', parsedUserData); // This should log the parsed user data
         return parsedUserData && parsedUserData.user ? parsedUserData.user.userId : null;
     };
-    
+   
 
     const [newRecipe, setNewRecipe] = useState({
         title: "",
@@ -29,37 +31,27 @@ export default function CreateRecipe() {
         setIsLoading(true);
         setError(null);
     
-        // Vérification si l'utilisateur est connecté
         const userId = getUserFromSession();
+        console.log('User ID from session:', userId); // Vérifiez si l'ID utilisateur est bien récupéré
+    
         if (!userId) {
             setError("Utilisateur non connecté");
             setIsLoading(false);
             return;
         }
     
-        // Validation des données requises
-        if (!newRecipe.title.trim() || newRecipe.ingredients.some(ing => !ing.trim())) {
-            setError("Le titre et tous les ingrédients sont requis");
-            setIsLoading(false);
-            return;
-        }
-    
-        // Transformation des données avant envoi
+        // Validez les données et envoyez la requête
         const recipeData = {
             title: newRecipe.title,
             description: newRecipe.description,
             image: newRecipe.image,
-            // Convertir les ingrédients en objets avec la propriété 'name'
             ingredients: newRecipe.ingredients.filter(ing => ing.trim()).map(ing => ({ name: ing.trim() })),
-            // Convertir les instructions en objets avec la propriété 'step'
             instructions: newRecipe.instructions.filter(inst => inst.trim()).map(inst => ({ step: inst.trim() }))
         };
     
-        console.log("Données envoyées : ", recipeData);  // Ajoutez une console pour vérifier le format des données
-    
         try {
             const response = await axios.post(
-                `http://localhost:3000/api/recipes/${userId}`,
+                `http://localhost:5000/api/recipes/${userId}`,
                 recipeData,
                 {
                     headers: {
@@ -70,19 +62,19 @@ export default function CreateRecipe() {
     
             if (response.status === 201) {
                 alert('Recette créée avec succès!');
-                navigate('/RecetteForm'); // Redirection vers la liste des recettes
+                navigate('/RecetteForm');
             }
         } catch (error) {
             console.error('Erreur lors de la création de la recette:', error);
             setError(
-                error.response?.data?.message || 
-                error.message || 
-                'Échec de la création de la recette. Veuillez réessayer.'
+                error.response?.data?.message || error.message || 'Échec de la création de la recette. Veuillez réessayer.'
             );
         } finally {
             setIsLoading(false);
         }
     };
+    
+    
     
     
 

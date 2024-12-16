@@ -78,8 +78,8 @@ export default function EditRecipe() {
         setIsLoading(true);
 
         try {
-            const userid = getUserIdFromSessionStorage();  // Récupération de l'ID utilisateur depuis le sessionStorage
-            console.log('ID utilisateur récupéré :', userid);
+            const userId = getUserIdFromSessionStorage();  // Récupération de l'ID utilisateur depuis le sessionStorage
+            console.log('ID utilisateur récupéré :', userId);
 
             // Reformater les données avant de les envoyer
             const formattedRecipe = formatRecipeData(recipe);
@@ -87,7 +87,7 @@ export default function EditRecipe() {
 
             // Envoi des données formatées au backend
             await axios.put(
-                `http://localhost:3000/api/recipes/${userid}`,
+                `http://localhost:5000/api/recipes/${userId}`,
                 formattedRecipe
             );
 
